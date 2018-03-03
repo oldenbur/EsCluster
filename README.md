@@ -19,5 +19,15 @@ $ git clone https://github.com/wurstmeister/kafka-docker.git
 $ cd kafka-docker
 $ vim docker-compose.yml # modify KAFKA_ADVERTISED_HOST_NAME and zookeeper to mac IP
 $ docker-compose up -d
+
+$ ./start-kafka-shell.sh 192.168.99.36 192.168.99.36:2181
+# $KAFKA_HOME/bin/kafka-topics.sh --create --topic topic1 --partitions 1 --zookeeper $ZK --replication-factor 1
+# $KAFKA_HOME/bin/kafka-topics.sh --list --zookeeper $ZK
+# $KAFKA_HOME/bin/kafka-console-producer.sh --topic topic1 --broker-list=`broker-list.sh`
+
+
+# create a docker swarm vm:
+$ docker-machine create --driver virtualbox --virtualbox-hostonly-cidr "10.10.10.1/24" myvm1
+
 ```
 
