@@ -17,18 +17,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer c.Close()
 
 	c.SubscribeTopics([]string{"myTopic", "^aRegex.*[Tt]opic"}, nil)
 
-	for {
-		msg, err := c.ReadMessage(-1)
-		if err == nil {
-			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
-		} else {
-			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
-			break
-		}
-	}
+	fmt.Println("kclient starting")
 
-	c.Close()
+	//for {
+	//	msg, err := c.ReadMessage(-1)
+	//	if err == nil {
+	//		fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+	//	} else {
+	//		fmt.Printf("Consumer error: %v (%v)\n", err, msg)
+	//		break
+	//	}
+	//}
 }
