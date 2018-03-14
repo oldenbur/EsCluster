@@ -3,7 +3,7 @@ version: '3'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
-    network_mode: host
+    #network_mode: host
     ports:
        - "32181:32181"
     environment:
@@ -14,15 +14,15 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    network_mode: host
+    #network_mode: host
     ports:
       - "29092:29092"
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: localhost:32181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+      KAFKA_ZOOKEEPER_CONNECT: ${DOCKER_MACHINE_IP}:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${DOCKER_MACHINE_IP}:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     extra_hosts:
       - "moby:127.0.0.1"
@@ -33,6 +33,6 @@ services:
     depends_on:
       - kafka
     environment:
-      KCLIENT_BROKER: localhost:29092
+      KCLIENT_BROKER: ${DOCKER_MACHINE_IP}:29092
     extra_hosts:
       - "moby:127.0.0.1"
