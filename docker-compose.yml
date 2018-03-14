@@ -1,9 +1,11 @@
 ---
-version: '2'
+version: '3'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     network_mode: host
+    ports:
+       - "32181:32181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
@@ -13,6 +15,8 @@ services:
   kafka:
     image: confluentinc/cp-kafka:latest
     network_mode: host
+    ports:
+      - "29092:29092"
     depends_on:
       - zookeeper
     environment:
@@ -23,3 +27,12 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
 
+  kclient:
+    image: oldenbur/kclient
+    network_mode: host
+    depends_on:
+      - kafka
+    environment:
+      KCLIENT_BROKER: localhost:29092
+    extra_hosts:
+      - "moby:127.0.0.1"
