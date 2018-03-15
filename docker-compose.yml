@@ -29,7 +29,7 @@ services:
 
   kclient:
     image: oldenbur/kclient
-    network_mode: host
+    #network_mode: host
     depends_on:
       - kafka
     environment:
