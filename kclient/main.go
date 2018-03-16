@@ -2,10 +2,13 @@ package main
 
 import (
 	"github.com/cihub/seelog"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/oldenbur/esCluster/kclient/kconsumer"
 	"github.com/urfave/cli"
 	"github.com/vrecan/death"
 	"io"
 	"os"
+	"syscall"
 )
 
 const (
@@ -14,6 +17,9 @@ const (
 
 	cmdFlagKafkaTopic = "topic"
 	cmdEnvKafkaTopic  = "KCLIENT_TOPIC"
+
+	cmdFlagKafkaGroup = "group"
+	cmdEnvKafkaGroup  = "KCLIENT_GROUP"
 )
 
 func main() {
@@ -21,9 +27,13 @@ func main() {
 	configureLogger()
 	seelog.Info("kclient started")
 
+	injector = &kclientInjector{
+		newKConsumer: kconsumer.NewKConsumer,
+	}
+
 	app := cli.NewApp()
-	app.Name = "ConfigControl"
-	app.Usage = "Tool to control merging config file changes during an upgrade"
+	app.Name = "KClient"
+	app.Usage = "Kafka client with configurable roles and behavior"
 	app.Commands = []cli.Command{
 		{
 			Name:  "consume",
@@ -39,8 +49,13 @@ func main() {
 					Usage:  "kafka topic",
 					EnvVar: cmdEnvKafkaTopic,
 				},
+				cli.StringFlag{
+					Name:   cmdFlagKafkaGroup,
+					Usage:  "kafka group",
+					EnvVar: cmdEnvKafkaGroup,
+				},
 			},
-			Action: consume,
+			Action: consumeAction,
 		},
 	}
 	app.Run(os.Args)
@@ -57,18 +72,8 @@ type StartCloser interface {
 	io.Closer
 }
 
-var injector KClientInjector
-
-type KClientInjector interface {
-	NewKConsumer(broker, topic string) StartCloser
-}
-
-type kclientInjector struct {
-	newKConsumer func(broker, topic string) StartCloser
-}
-
-func (i *kclientInjector) NewKConsumer(broker, topic string) StartCloser {
-	return i.newKConsumer(broker, topic)
+func consumeAction(context *cli.Context) error {
+	return consume(context)
 }
 
 func consume(args argsProducer) error {
@@ -83,18 +88,20 @@ func consume(args argsProducer) error {
 		return seelog.Errorf("%s not defined", cmdFlagKafkaTopic)
 	}
 
-	death := death.NewDeath(sys.SIGINT, sys.SIGTERM) //pass the signals you want to end your application
-	objects := make([]io.Closer, 0)
+	group := args.String(cmdFlagKafkaGroup)
+	if group == "" {
+		return seelog.Errorf("%s not defined", cmdFlagKafkaGroup)
+	}
 
-	kconsumer := injector.NewKConsumer(broker, topic)
+	kconsumer := injector.NewKConsumer(broker, topic, group, &nilConsumer{})
 	err := kconsumer.Start()
 	if err != nil {
 		return seelog.Errorf("NewKConsumer error: %v", err)
 	}
 
-	objects = append(objects, kconsumer)
+	death := death.NewDeath(syscall.SIGINT, syscall.SIGTERM)
+	death.WaitForDeath(kconsumer)
 
-	death.WaitForDeath(objects...) // this will finish when a signal of your type is sent to your application
 	return nil
 }
 
@@ -115,4 +122,24 @@ func configureLogger() {
 		panic(err)
 	}
 
+}
+
+var injector KClientInjector
+
+type KClientInjector interface {
+	NewKConsumer(broker, topic, group string, c kconsumer.MessageConsumer) StartCloser
+}
+
+type kclientInjector struct {
+	newKConsumer func(broker, topic, group string, c kconsumer.MessageConsumer) *kconsumer.KConsumer
+}
+
+func (i *kclientInjector) NewKConsumer(broker, topic, group string, c kconsumer.MessageConsumer) StartCloser {
+	return i.newKConsumer(broker, topic, group, c)
+}
+
+type nilConsumer struct{}
+
+func (*nilConsumer) Consume(message *kafka.Message) error {
+	return nil
 }
