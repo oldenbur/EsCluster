@@ -13,10 +13,10 @@ RUN make install
 
 ENV LD_LIBRARY_PATH /usr/local/lib
 
-WORKDIR /go/src/kclient
+WORKDIR /go/src/github.com/oldenbur/esCluster/kclient
 COPY . .
 
 RUN go get -d -v ./...
 RUN go install -v ./...
 
-CMD ["kclient"]
+CMD ["kclient","consume"]

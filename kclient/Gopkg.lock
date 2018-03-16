@@ -2,14 +2,32 @@
 
 
 [[projects]]
+  name = "github.com/cihub/seelog"
+  packages = ["."]
+  revision = "d2c6e5aa9fbfdd1c624e140287063c7730654115"
+  version = "v2.6"
+
+[[projects]]
   name = "github.com/confluentinc/confluent-kafka-go"
   packages = ["kafka"]
   revision = "f696f02dcbb04d95b103c5b848bb15f749a996f7"
   version = "v0.11.0"
 
+[[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/vrecan/death"
+  packages = ["."]
+  revision = "a6a7840c1cdd4ad8a1cfe568ea382ae54d710235"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cdc1daa1008339a3e5c4103d6a39fb683fe193c9a32a527f82c83d953e825fa0"
+  inputs-digest = "cfe569723d4ce8154c3815c021db76d72d0309d6bbf7cbd66a6086fda3e97102"
   solver-name = "gps-cdcl"
   solver-version = 1

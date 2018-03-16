@@ -29,10 +29,12 @@ services:
 
   kclient:
     image: oldenbur/kclient
-    network_mode: host
+    #network_mode: host
     depends_on:
       - kafka
     environment:
       KCLIENT_BROKER: ${DOCKER_MACHINE_IP}:29092
+      KCLIENT_TOPIC: foo
+      KCLIENT_GROUP: group1
     extra_hosts:
       - "moby:127.0.0.1"
