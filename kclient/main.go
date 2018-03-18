@@ -4,6 +4,7 @@ import (
 	"github.com/cihub/seelog"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/oldenbur/esCluster/kclient/kconsumer"
+	"github.com/oldenbur/esCluster/kclient/kproducer"
 	"github.com/urfave/cli"
 	"github.com/vrecan/death"
 	"io"
@@ -57,6 +58,11 @@ func main() {
 			},
 			Action: consumeAction,
 		},
+		{
+			Name:   "produce",
+			Usage:  "produce stuff",
+			Action: produceAction,
+		},
 	}
 	app.Run(os.Args)
 
@@ -72,9 +78,8 @@ type StartCloser interface {
 	io.Closer
 }
 
-func consumeAction(context *cli.Context) error {
-	return consume(context)
-}
+func consumeAction(context *cli.Context) error { return consume(context) }
+func produceAction(context *cli.Context) error { kproducer.Produce(); return nil }
 
 func consume(args argsProducer) error {
 

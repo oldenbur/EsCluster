@@ -25,9 +25,21 @@
   packages = ["."]
   revision = "a6a7840c1cdd4ad8a1cfe568ea382ae54d710235"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  revision = "24dd3780ca4f75fed9f321890729414a4b5d3f13"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/time"
+  packages = ["rate"]
+  revision = "26559e0f760e39c24d730d3224364aef164ee23f"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cfe569723d4ce8154c3815c021db76d72d0309d6bbf7cbd66a6086fda3e97102"
+  inputs-digest = "abeee6a53901356e5960d0d358429e0d158ca92358fc2e1185812c30497e4c0d"
   solver-name = "gps-cdcl"
   solver-version = 1

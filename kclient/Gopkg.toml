@@ -41,6 +41,10 @@
   branch = "master"
   name = "github.com/vrecan/death"
 
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/time"
+
 [prune]
   go-tests = true
   unused-packages = true
