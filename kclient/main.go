@@ -21,6 +21,9 @@ const (
 
 	cmdFlagKafkaGroup = "group"
 	cmdEnvKafkaGroup  = "KCLIENT_GROUP"
+
+	cmdFlagMps = "mps"
+	cmdEnvMps  = "KCLIENT_MPS"
 )
 
 func main() {
@@ -30,6 +33,7 @@ func main() {
 
 	injector = &kclientInjector{
 		newKConsumer: kconsumer.NewKConsumer,
+		newKProducer: kproducer.NewKProducer,
 	}
 
 	app := cli.NewApp()
@@ -59,8 +63,30 @@ func main() {
 			Action: consumeAction,
 		},
 		{
-			Name:   "produce",
-			Usage:  "produce stuff",
+			Name:  "produce",
+			Usage: "produce stuff",
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:   cmdFlagMps,
+					Usage:  "production rate in messages per second",
+					EnvVar: cmdEnvMps,
+				},
+				cli.StringFlag{
+					Name:   cmdFlagKafkaBroker,
+					Usage:  "kafka broker endpoint",
+					EnvVar: cmdEnvKafkaBroker,
+				},
+				cli.StringFlag{
+					Name:   cmdFlagKafkaTopic,
+					Usage:  "kafka topic",
+					EnvVar: cmdEnvKafkaTopic,
+				},
+				cli.StringFlag{
+					Name:   cmdFlagKafkaGroup,
+					Usage:  "kafka group",
+					EnvVar: cmdEnvKafkaGroup,
+				},
+			},
 			Action: produceAction,
 		},
 	}
@@ -71,6 +97,7 @@ func main() {
 
 type argsProducer interface {
 	String(string) string
+	Int(string) int
 }
 
 type StartCloser interface {
@@ -79,7 +106,7 @@ type StartCloser interface {
 }
 
 func consumeAction(context *cli.Context) error { return consume(context) }
-func produceAction(context *cli.Context) error { kproducer.Produce(); return nil }
+func produceAction(context *cli.Context) error { return produce(context) }
 
 func consume(args argsProducer) error {
 
@@ -110,6 +137,40 @@ func consume(args argsProducer) error {
 	return nil
 }
 
+func produce(args argsProducer) error {
+
+	mps := args.Int(cmdFlagMps)
+	if mps == 0 {
+		return seelog.Errorf("%s not defined", cmdFlagMps)
+	}
+
+	broker := args.String(cmdFlagKafkaBroker)
+	if broker == "" {
+		return seelog.Errorf("%s not defined", cmdFlagKafkaBroker)
+	}
+
+	topic := args.String(cmdFlagKafkaTopic)
+	if topic == "" {
+		return seelog.Errorf("%s not defined", cmdFlagKafkaTopic)
+	}
+
+	group := args.String(cmdFlagKafkaGroup)
+	if group == "" {
+		return seelog.Errorf("%s not defined", cmdFlagKafkaGroup)
+	}
+
+	kproducer := injector.NewKProducer(mps, broker, topic, group)
+	err := kproducer.Start()
+	if err != nil {
+		return seelog.Errorf("NewKProducer error: %v", err)
+	}
+
+	death := death.NewDeath(syscall.SIGINT, syscall.SIGTERM)
+	death.WaitForDeath(kproducer)
+
+	return nil
+}
+
 func configureLogger() {
 
 	testConfig := `
@@ -133,14 +194,20 @@ var injector KClientInjector
 
 type KClientInjector interface {
 	NewKConsumer(broker, topic, group string, c kconsumer.MessageConsumer) StartCloser
+	NewKProducer(mps int, broker, topic, group string) StartCloser
 }
 
 type kclientInjector struct {
 	newKConsumer func(broker, topic, group string, c kconsumer.MessageConsumer) *kconsumer.KConsumer
+	newKProducer func(mps int, broker, topic, group string) *kproducer.KProducer
 }
 
 func (i *kclientInjector) NewKConsumer(broker, topic, group string, c kconsumer.MessageConsumer) StartCloser {
 	return i.newKConsumer(broker, topic, group, c)
+}
+
+func (i *kclientInjector) NewKProducer(mps int, broker, topic, group string) StartCloser {
+	return i.newKProducer(mps, broker, topic, group)
 }
 
 type nilConsumer struct{}
