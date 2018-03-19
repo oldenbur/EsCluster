@@ -19,5 +19,5 @@ type jsonProducer struct {
 
 func (j *jsonProducer) Produce() []byte {
 	j.counter += 1
-	return []byte(fmt.Sprintf(`{"ts": "%s", "id": %d}`, time.Now().Format(tsFormat), j.counter))
+	return []byte(fmt.Sprintf(`{"ts": "%s", "id1": %d}`, time.Now().Format(tsFormat), j.counter))
 }
