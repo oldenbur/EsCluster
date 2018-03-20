@@ -18,6 +18,7 @@ const (
 type KProducer struct {
 	doneChan chan bool
 	wg       *sync.WaitGroup
+	producer MessageProducer
 
 	mps    uint
 	broker string
@@ -29,6 +30,7 @@ func NewKProducer(mps int, broker, topic, group string) *KProducer {
 	return &KProducer{
 		doneChan: make(chan bool),
 		wg:       &sync.WaitGroup{},
+		producer: &jsonProducer{},
 		mps:      uint(mps),
 		broker:   broker,
 		topic:    topic,
@@ -78,7 +80,7 @@ func (p *KProducer) Start() error {
 
 				prod.ProduceChannel() <- &kafka.Message{
 					TopicPartition: kafka.TopicPartition{Topic: &p.topic, Partition: kafka.PartitionAny},
-					Value:          []byte(`howdy`),
+					Value:          p.producer.Produce(),
 				}
 			}
 		}
