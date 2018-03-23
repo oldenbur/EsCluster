@@ -7,6 +7,9 @@ Dockerized kafka elasticsearch streaming and persistence pipeline.
 See https://kafka.apache.org/quickstart
 * Mac: `wget http://apache.claz.org/kafka/1.0.1/kafka_2.11-1.0.1.tgz`
 
+#### Install Confluent Platform
+See https://www.confluent.io/download
+
 #### kclient Docker Image
 Based on the golang docker development [guide](https://hub.docker.com/_/golang/).
 ```
@@ -28,4 +31,9 @@ $ docker-compose up -d
 $ cd kafka_2.11-1.0.1
 $ bin/kafka-topics.sh --create --topic foo --partitions 1 --replication-factor 1 --if-not-exists --zookeeper ${DOCKER_MACHINE_IP}:32181
 $ seq 42 | bin/kafka-console-producer.sh --request-required-acks 1 --broker-list ${DOCKER_MACHINE_IP}:29092 --topic foo && echo 'Produced 42 messages.'
+```
+
+#### Elasticsearch Connector
+```
+/usr/bin/connect-standalone connect-standalone.properties connect-elasticsearch.properties
 ```

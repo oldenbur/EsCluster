@@ -23,10 +23,9 @@ type KProducer struct {
 	mps    uint
 	broker string
 	topic  string
-	group  string
 }
 
-func NewKProducer(mps int, broker, topic, group string) *KProducer {
+func NewKProducer(mps int, broker, topic string) *KProducer {
 	return &KProducer{
 		doneChan: make(chan bool),
 		wg:       &sync.WaitGroup{},
@@ -34,7 +33,6 @@ func NewKProducer(mps int, broker, topic, group string) *KProducer {
 		mps:      uint(mps),
 		broker:   broker,
 		topic:    topic,
-		group:    group,
 	}
 }
 
@@ -70,17 +68,21 @@ func (p *KProducer) Start() error {
 				p.handleKafkaEvent(ev)
 
 			default:
-				seelog.Debug("Waiting")
+				seelog.Trace("Waiting")
 				ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 				if err := lim.Wait(ctx); err != nil {
 					seelog.Warnf("KProducer Wait returned error: %v", err)
 				}
-				seelog.Infof("KProducer Wait returned - delay: %v", time.Since(last))
-				last = time.Now()
 
+				msg := p.producer.Produce()
 				prod.ProduceChannel() <- &kafka.Message{
 					TopicPartition: kafka.TopicPartition{Topic: &p.topic, Partition: kafka.PartitionAny},
-					Value:          p.producer.Produce(),
+					Value:          msg,
+				}
+
+				if p.mps <= 5 {
+					seelog.Debugf("KProducer sent msg: %s  delay: %v", string(msg), time.Since(last))
+					last = time.Now()
 				}
 			}
 		}
