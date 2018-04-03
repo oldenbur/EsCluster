@@ -3,6 +3,8 @@ package kproducer
 import (
 	"fmt"
 	"time"
+
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -19,5 +21,6 @@ type jsonProducer struct {
 
 func (j *jsonProducer) Produce() []byte {
 	j.counter += 1
-	return []byte(fmt.Sprintf(`{"ts": "%s", "id1": %d}`, time.Now().Format(tsFormat), j.counter))
+	return []byte(fmt.Sprintf(`{"ts": "%s", "_id": "%s", "count": %d}`,
+		time.Now().Format(tsFormat), uuid.NewV4(), j.counter))
 }
